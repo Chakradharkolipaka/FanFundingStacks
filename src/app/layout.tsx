@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import Navbar from "@/components/Navbar";
@@ -7,8 +6,6 @@ import PageTransitionWrapper from "@/components/PageTransitionWrapper";
 import { ThemeProvider } from "@/app/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import BottomNav from "@/components/BottomNav";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Fan Funding | Aptos",
@@ -22,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className="font-sans antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

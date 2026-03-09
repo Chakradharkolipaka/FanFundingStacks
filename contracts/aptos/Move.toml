@@ -4,7 +4,7 @@ version = "1.0.0"
 authors = ["Chakradhar"]
 
 [addresses]
-fan_funding = "_"
+fan_funding = "0x84665cf0eeeabf01980ec766edf01e1d2cc913f247d03ae8b7ae977da8aca4d3"
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-core.git"
