@@ -17,6 +17,7 @@ import { useToast } from "@/components/ui/use-toast";
 import Confetti from "react-confetti";
 import { Loader2, ExternalLink } from "lucide-react";
 import { useDonate } from "@/hooks/useDonate";
+import { useWallet } from "@/lib/wallet";
 import {
   shortenAddress,
   formatEth,
@@ -39,6 +40,7 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
   const [donationAmount, setDonationAmount] = useState("");
   const [showConfetti, setShowConfetti] = useState(false);
   const { toast } = useToast();
+  const { address: walletAddress } = useWallet();
   const { donate, isLoading: isDonating, isConfirmed, txHash } = useDonate();
 
   useEffect(() => {
@@ -64,6 +66,17 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
       toast({
         title: "Error",
         description: "NFT object ID not found. Cannot donate.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Prevent self-donation: stx-transfer? fails when sender === recipient
+    if (walletAddress && owner && walletAddress === owner) {
+      toast({
+        title: "Cannot Donate to Yourself",
+        description:
+          "You are the creator of this NFT. Please use a different wallet to donate, or donate to another creator's NFT.",
         variant: "destructive",
       });
       return;

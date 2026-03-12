@@ -113,7 +113,23 @@ export function useDonate() {
                       txData.tx_status === "abort_by_response" ||
                       txData.tx_status === "abort_by_post_condition"
                     ) {
-                      console.error("[Donate] Transaction failed:", txData.tx_status);
+                      const repr = txData.tx_result?.repr || "";
+                      let errorDetail = txData.tx_status;
+                      if (repr.includes("u2") || repr.includes("u105")) {
+                        errorDetail = "Cannot donate to yourself (sender = creator). Use a different wallet.";
+                      } else if (repr.includes("u100")) {
+                        errorDetail = "Invalid token ID — this NFT does not exist.";
+                      } else if (repr.includes("u101")) {
+                        errorDetail = "Donation amount must be greater than 0.";
+                      } else if (repr.includes("u102")) {
+                        errorDetail = "STX transfer failed — check your balance.";
+                      }
+                      console.error("[Donate] Transaction failed:", txData.tx_status, repr);
+                      toast({
+                        title: "❌ Donation Failed",
+                        description: errorDetail,
+                        variant: "destructive",
+                      });
                       break;
                     }
                   }

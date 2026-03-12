@@ -8,6 +8,7 @@
 (define-constant ERR_TRANSFER_FAILED (err u102))
 (define-constant ERR_NOT_FOUND (err u103))
 (define-constant ERR_METADATA_FROZEN (err u104))
+(define-constant ERR_SELF_DONATION (err u105))
 
 ;; --- NFT Definition -------------------------------------
 ;; SIP-009 compliant NFT
@@ -97,6 +98,9 @@
     )
     ;; Validate amount > 0
     (asserts! (> amount u0) ERR_ZERO_DONATION)
+
+    ;; Prevent self-donation (stx-transfer? fails with err u2 when sender = recipient)
+    (asserts! (not (is-eq tx-sender creator)) ERR_SELF_DONATION)
 
     ;; Transfer STX from donor to creator
     (try! (stx-transfer? amount tx-sender creator))
