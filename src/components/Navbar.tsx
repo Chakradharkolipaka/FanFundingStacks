@@ -20,7 +20,7 @@ export default function Navbar() {
             <span className="flex flex-col">
               <span className="text-sm font-semibold leading-tight">Fan Funding</span>
               <span className="text-xs text-muted-foreground leading-tight">
-                Sui • Support creators on-chain
+                Stacks • Support creators on-chain
               </span>
             </span>
           </Link>

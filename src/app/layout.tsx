@@ -8,8 +8,8 @@ import { Toaster } from "@/components/ui/toaster";
 import BottomNav from "@/components/BottomNav";
 
 export const metadata: Metadata = {
-  title: "Fan Funding | Sui",
-  description: "Decentralized fan funding platform on Sui — mint NFTs and support creators with SUI.",
+  title: "Fan Funding | Stacks",
+  description: "Decentralized fan funding platform on Stacks — mint NFTs and support creators with STX.",
 };
 
 export default function RootLayout({

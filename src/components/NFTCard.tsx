@@ -71,7 +71,7 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
 
     try {
       const amountMist = parseEth(donationAmount);
-      console.log("[NFTCard] Donating", donationAmount, DONATION_TOKEN_SYMBOL, "=", amountMist.toString(), "MIST to object:", objectId);
+      console.log("[NFTCard] Donating", donationAmount, DONATION_TOKEN_SYMBOL, "=", amountMist.toString(), "microSTX to token:", objectId);
       donate(objectId, amountMist);
     } catch {
       toast({
@@ -140,7 +140,7 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
                   Your support helps the creator. Enter the amount of {DONATION_TOKEN_SYMBOL} you&apos;d like to donate.
                   <br />
                   <span className="text-xs mt-1 block">
-                    💡 On Sui, this sends a native SUI transfer via the smart contract.
+                    💡 On Stacks, this sends a native STX transfer via the Clarity smart contract.
                   </span>
                 </DialogDescription>
               </DialogHeader>
@@ -156,7 +156,7 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
                     disabled={isDonating}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Amount in {DONATION_TOKEN_SYMBOL} (e.g. 0.1 = 100,000,000 MIST)
+                    Amount in {DONATION_TOKEN_SYMBOL} (e.g. 0.1 = 100,000 microSTX)
                   </p>
                 </div>
                 <Button
@@ -189,18 +189,18 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
                 )}
 
                 <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
-                  <h4 className="text-xs font-semibold text-muted-foreground">💧 Need testnet SUI?</h4>
+                  <h4 className="text-xs font-semibold text-muted-foreground">💧 Need testnet STX?</h4>
                   <div className="flex flex-wrap gap-2">
                     <a
-                      href="https://discord.gg/sui"
+                      href="https://explorer.hiro.so/sandbox/faucet?chain=testnet"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-primary hover:underline"
                     >
-                      Discord Faucet ↗
+                      Hiro Faucet ↗
                     </a>
                     <span className="text-xs text-muted-foreground">
-                      or run: <code className="font-mono">sui client faucet</code>
+                      Wallet: <a href="https://leather.io/install-extension" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Leather ↗</a>
                     </span>
                   </div>
                 </div>

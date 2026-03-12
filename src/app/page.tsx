@@ -7,8 +7,8 @@ import NFTCard from "@/components/NFTCard";
 import SkeletonCard from "@/components/SkeletonCard";
 import { Button } from "@/components/ui/button";
 import { useNFTs } from "@/hooks/useNFTs";
-import { formatEth, shortenAddress, explorerAccountUrl, explorerTxUrl, explorerObjectUrl } from "@/lib/sui-utils";
-import { PACKAGE_ID, COLLECTION_ID, DONATION_TOKEN_SYMBOL, EXPLORER_BASE_URL } from "@/constants";
+import { formatEth, shortenAddress, explorerAccountUrl, explorerTxUrl, explorerContractUrl } from "@/lib/stacks-utils";
+import { CONTRACT_ID, CONTRACT_ADDRESS, DONATION_TOKEN_SYMBOL, EXPLORER_BASE_URL } from "@/constants";
 import { ExternalLink } from "lucide-react";
 
 export default function Home() {
@@ -62,26 +62,16 @@ export default function Home() {
           </h1>
           <p className="text-muted-foreground max-w-xl text-sm md:text-base">
             Discover NFTs, support creators, and track the most supported drops — powered
-            by <span className="font-semibold text-primary">Sui</span>.
+            by <span className="font-semibold text-primary">Stacks</span>.
           </p>
-          {PACKAGE_ID && (
+          {CONTRACT_ADDRESS && (
             <a
-              href={explorerObjectUrl(PACKAGE_ID)}
+              href={explorerContractUrl()}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs text-muted-foreground mt-2 hover:text-primary transition-colors"
             >
-              Package: {shortenAddress(PACKAGE_ID)} <ExternalLink className="h-3 w-3" />
-            </a>
-          )}
-          {COLLECTION_ID && (
-            <a
-              href={explorerObjectUrl(COLLECTION_ID)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground mt-2 ml-4 hover:text-primary transition-colors"
-            >
-              Collection: {shortenAddress(COLLECTION_ID)} <ExternalLink className="h-3 w-3" />
+              Contract: {shortenAddress(CONTRACT_ID)} <ExternalLink className="h-3 w-3" />
             </a>
           )}
         </div>
@@ -104,35 +94,35 @@ export default function Home() {
       </section>
 
       {/* ── Network Info Banner ── */}
-      <section className="rounded-xl border bg-gradient-to-r from-blue-500/10 via-cyan-500/10 to-teal-500/10 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all duration-300 hover:shadow-lg">
+      <section className="rounded-xl border bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-blue-500/10 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all duration-300 hover:shadow-lg">
         <div className="flex items-center gap-3">
           <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse" />
           <div>
-            <p className="text-sm font-medium">Sui Testnet</p>
+            <p className="text-sm font-medium">Stacks Testnet</p>
             <p className="text-xs text-muted-foreground">
-              Wallet: Sui Wallet / Suiet / Ethos | Fee token: SUI
+              Wallet: Leather / Xverse | Fee token: STX | MetaMask: ❌ Not supported
             </p>
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
           <a
-            href="https://discord.gg/sui"
+            href="https://explorer.hiro.so/sandbox/faucet?chain=testnet"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs px-3 py-1 rounded-full border bg-background hover:bg-accent transition-all duration-200 hover:scale-105"
           >
-            💧 Get Testnet SUI
+            💧 Get Testnet STX
           </a>
           <a
-            href="https://suiwallet.com/"
+            href="https://leather.io/install-extension"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs px-3 py-1 rounded-full border bg-background hover:bg-accent transition-all duration-200 hover:scale-105"
           >
-            💧 Sui Wallet
+            � Leather Wallet
           </a>
           <a
-            href="https://suiscan.xyz/testnet"
+            href="https://explorer.hiro.so/?chain=testnet"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs px-3 py-1 rounded-full border bg-background hover:bg-accent transition-all duration-200 hover:scale-105"
@@ -185,40 +175,40 @@ export default function Home() {
           </div>
 
           <div className="rounded-2xl border bg-card dark:bg-gradient-to-br dark:from-slate-900/80 dark:to-slate-800/80 p-6 transition-all duration-300 hover:shadow-lg">
-            <h2 className="text-xl font-semibold mb-1">About Sui</h2>
+            <h2 className="text-xl font-semibold mb-1">About Stacks</h2>
             <p className="text-sm text-muted-foreground mb-4">
               Key info about the network powering this platform.
             </p>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
                 <span className="text-muted-foreground">Network</span>
-                <span className="font-medium">Sui Testnet</span>
+                <span className="font-medium">Stacks Testnet</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
                 <span className="text-muted-foreground">Consensus</span>
-                <span className="font-medium">Mysticeti (DAG-based)</span>
+                <span className="font-medium">Proof of Transfer (PoX) — anchored to Bitcoin</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
                 <span className="text-muted-foreground">Smart Contract</span>
-                <span className="font-medium">Move Language (Object Model)</span>
+                <span className="font-medium">Clarity Language (decidable)</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
-                <span className="text-muted-foreground">Object Model</span>
-                <span className="font-medium">Object-Centric (Shared Objects)</span>
+                <span className="text-muted-foreground">Wallet</span>
+                <span className="font-medium">Leather / Xverse (not MetaMask)</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
                 <span className="text-muted-foreground">Donation Method</span>
-                <span className="font-medium">Native SUI Transfer via Contract</span>
+                <span className="font-medium">Native STX Transfer via Contract</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
                 <span className="text-muted-foreground">Block Explorer</span>
                 <a
-                  href={EXPLORER_BASE_URL}
+                  href={EXPLORER_BASE_URL + "?chain=testnet"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-medium text-primary hover:underline flex items-center gap-1"
                 >
-                  SuiScan <ExternalLink className="h-3 w-3" />
+                  Hiro Explorer <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
             </div>
@@ -244,7 +234,7 @@ export default function Home() {
           ) : (
             <div className="col-span-full text-center py-10">
               <p className="mb-4 text-muted-foreground">
-                No NFTs found yet. Be the first to mint and support a cause on Sui.
+                No NFTs found yet. Be the first to mint and support a cause on Stacks.
               </p>
               <Button asChild className="transition-all duration-200 hover:scale-105 hover:shadow-lg">
                 <Link href="/mint">Mint an NFT</Link>

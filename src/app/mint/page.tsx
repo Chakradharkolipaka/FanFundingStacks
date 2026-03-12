@@ -11,7 +11,7 @@ import { useWallet } from "@/lib/wallet";
 import { useMintNFT } from "@/hooks/useMintNFT";
 import { Loader2, Upload, ExternalLink, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
-import { explorerTxUrl } from "@/lib/sui-utils";
+import { explorerTxUrl } from "@/lib/stacks-utils";
 
 export default function MintPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -57,7 +57,7 @@ export default function MintPage() {
     if (!connected || !address) {
       toast({
         title: "Wallet Not Connected",
-        description: "Please connect your Sui wallet first.",
+        description: "Please connect your Stacks wallet first.",
         variant: "destructive",
       });
       return;
@@ -92,7 +92,7 @@ export default function MintPage() {
             <CardTitle className="text-3xl font-bold text-center">Create Your NFT</CardTitle>
             <CardDescription className="text-center">
               Upload your artwork and mint it as a unique NFT on{" "}
-              <span className="font-semibold text-primary">Sui</span>.
+              <span className="font-semibold text-primary">Stacks</span>.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -185,7 +185,7 @@ export default function MintPage() {
             {/* Wallet warnings */}
             {!connected && (
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-sm text-yellow-800 dark:text-yellow-200 transition-all duration-300">
-                ⚠️ Please connect your Sui wallet using the button in the navigation bar.
+                ⚠️ Please connect your Stacks wallet (Leather/Xverse) using the button in the navigation bar.
               </div>
             )}
 
@@ -219,29 +219,36 @@ export default function MintPage() {
                 </>
               ) : isConfirming ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirming on Sui...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirming on Stacks...
                 </>
               ) : (
-                "Mint NFT on Sui"
+                "Mint NFT on Stacks"
               )}
             </Button>
 
             {/* Faucet info */}
             <div className="rounded-lg border bg-muted/30 p-3 space-y-1 text-xs text-muted-foreground">
-              <p className="font-semibold">💡 First time on Sui Testnet?</p>
+              <p className="font-semibold">💡 First time on Stacks Testnet?</p>
               <p>
-                You need testnet SUI for gas fees. Get some from the{" "}
+                You need testnet STX for gas fees. Get some from the{" "}
                 <a
-                  href="https://discord.gg/sui"
+                  href="https://explorer.hiro.so/sandbox/faucet?chain=testnet"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  Sui Discord ↗
-                </a>{" "}
-                or run{" "}
-                <code className="font-mono bg-muted px-1 rounded">sui client faucet</code> in your
-                terminal.
+                  Hiro Faucet ↗
+                </a>
+                . You also need{" "}
+                <a
+                  href="https://leather.io/install-extension"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Leather Wallet ↗
+                </a>
+                {" "}(MetaMask is not supported on Stacks).
               </p>
             </div>
           </CardContent>

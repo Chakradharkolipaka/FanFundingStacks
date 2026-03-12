@@ -1,16 +1,18 @@
 import { NextResponse } from "next/server";
 
-const SUI_NODE_URL =
-  process.env.NEXT_PUBLIC_SUI_NODE_URL || "https://fullnode.testnet.sui.io:443";
-const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID || "";
+const STACKS_API_URL =
+  process.env.NEXT_PUBLIC_STACKS_API_URL || "https://api.testnet.hiro.so";
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "";
+const CONTRACT_NAME = process.env.NEXT_PUBLIC_CONTRACT_NAME || "nft-donation";
 
 export const dynamic = "force-dynamic";
 
 /**
  * GET /api/donations/[tokenId]
- * Fetches donation events for a specific NFT from the Sui module events.
+ * Fetches donation events for a specific NFT from the Stacks contract events.
  *
- * On Sui, we query DonationEvents emitted by the contract using queryEvents.
+ * On Stacks, we query contract log events (print statements) from the Hiro API
+ * and filter for donation events matching the requested tokenId.
  */
 export async function GET(
   request: Request,
@@ -22,30 +24,14 @@ export async function GET(
       return NextResponse.json({ error: "Invalid token ID" }, { status: 400 });
     }
 
-    if (!PACKAGE_ID) {
-      return NextResponse.json({ error: "Package ID not configured" }, { status: 500 });
+    if (!CONTRACT_ADDRESS) {
+      return NextResponse.json({ error: "Contract address not configured" }, { status: 500 });
     }
 
-    // Query DonationEvents from the Sui RPC
-    const eventType = `${PACKAGE_ID}::nft_donation::DonationEvent`;
+    // Query contract events from the Hiro Stacks API
+    const eventsUrl = `${STACKS_API_URL}/extended/v1/contract/${CONTRACT_ADDRESS}.${CONTRACT_NAME}/events?limit=200`;
 
-    const rpcPayload = {
-      jsonrpc: "2.0",
-      id: 1,
-      method: "suix_queryEvents",
-      params: [
-        { MoveEventType: eventType },
-        null, // cursor
-        50,   // limit
-        false, // descending
-      ],
-    };
-
-    const eventsRes = await fetch(SUI_NODE_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(rpcPayload),
-    });
+    const eventsRes = await fetch(eventsUrl);
 
     if (!eventsRes.ok) {
       const txt = await eventsRes.text();
@@ -53,31 +39,38 @@ export async function GET(
       return NextResponse.json({ error: "Failed to fetch events" }, { status: 502 });
     }
 
-    const rpcResult = await eventsRes.json();
+    const eventsData = await eventsRes.json();
+    const events = eventsData.results || [];
 
-    if (rpcResult.error) {
-      console.error("RPC error:", rpcResult.error);
-      return NextResponse.json({ error: rpcResult.error.message }, { status: 502 });
-    }
-
-    const events = rpcResult.result?.data || [];
-
-    // Filter events for the requested tokenId
+    // Filter for donation events matching the tokenId
     const donations: Array<{
       donor: string;
       amount: string;
       creator: string;
-      txDigest: string;
+      txId: string;
     }> = [];
 
     for (const event of events) {
-      const data = event.parsedJson;
-      if (data && parseInt(data.token_id) === tokenId) {
+      if (!event.contract_log?.value?.repr) continue;
+
+      const repr = event.contract_log.value.repr;
+
+      // Check if this is a donation event for the requested tokenId
+      if (
+        repr.includes('"donation"') &&
+        repr.includes(`token-id: u${tokenId}`)
+      ) {
+        // Parse fields from the repr string
+        // Example repr: (tuple (event "donation") (token-id u1) (donor ST...) (amount u1000000) (creator ST...))
+        const donorMatch = repr.match(/donor:\s*(S[A-Z0-9]+)/);
+        const amountMatch = repr.match(/amount:\s*u(\d+)/);
+        const creatorMatch = repr.match(/creator:\s*(S[A-Z0-9]+)/);
+
         donations.push({
-          donor: data.donor,
-          amount: data.amount,
-          creator: data.creator,
-          txDigest: event.id?.txDigest || "",
+          donor: donorMatch?.[1] || "unknown",
+          amount: amountMatch?.[1] || "0",
+          creator: creatorMatch?.[1] || "unknown",
+          txId: event.tx_id || "",
         });
       }
     }
