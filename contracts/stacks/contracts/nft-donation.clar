@@ -1,7 +1,7 @@
-;; NFT Donation — FanFunding on Stacks
+;; NFT Donation -- FanFunding on Stacks
 ;; A Clarity smart contract for minting NFTs and accepting STX donations.
 
-;; ─── Constants ──────────────────────────────────────────
+;; --- Constants ------------------------------------------
 (define-constant CONTRACT_OWNER tx-sender)
 (define-constant ERR_INVALID_TOKEN_ID (err u100))
 (define-constant ERR_ZERO_DONATION (err u101))
@@ -9,15 +9,15 @@
 (define-constant ERR_NOT_FOUND (err u103))
 (define-constant ERR_METADATA_FROZEN (err u104))
 
-;; ─── NFT Definition ─────────────────────────────────────
+;; --- NFT Definition -------------------------------------
 ;; SIP-009 compliant NFT
 (define-non-fungible-token fan-token uint)
 
-;; ─── Data Variables ─────────────────────────────────────
+;; --- Data Variables -------------------------------------
 ;; Auto-incrementing token ID counter (starts at 0, first mint = 1)
 (define-data-var token-id-counter uint u0)
 
-;; ─── Data Maps ──────────────────────────────────────────
+;; --- Data Maps ------------------------------------------
 ;; token-id -> token URI (IPFS metadata URL)
 (define-map token-uris uint (string-ascii 256))
 
@@ -27,7 +27,7 @@
 ;; token-id -> total donations in microSTX
 (define-map total-donations uint uint)
 
-;; ─── SIP-009 Read-Only Functions ────────────────────────
+;; --- SIP-009 Read-Only Functions ------------------------
 
 (define-read-only (get-last-token-id)
   (ok (var-get token-id-counter))
@@ -41,7 +41,7 @@
   (ok (nft-get-owner? fan-token token-id))
 )
 
-;; ─── Custom Read-Only Functions ─────────────────────────
+;; --- Custom Read-Only Functions -------------------------
 
 (define-read-only (get-total-donations (token-id uint))
   (ok (default-to u0 (map-get? total-donations token-id)))
@@ -55,7 +55,7 @@
   (ok (var-get token-id-counter))
 )
 
-;; ─── Public Functions ───────────────────────────────────
+;; --- Public Functions -----------------------------------
 
 ;; Mint a new NFT with a token URI (e.g., IPFS metadata URL).
 ;; Anyone can mint. The minter becomes the creator/owner.
@@ -117,7 +117,7 @@
   )
 )
 
-;; ─── Transfer (SIP-009) ─────────────────────────────────
+;; --- Transfer (SIP-009) ---------------------------------
 
 (define-public (transfer (token-id uint) (sender principal) (recipient principal))
   (begin
