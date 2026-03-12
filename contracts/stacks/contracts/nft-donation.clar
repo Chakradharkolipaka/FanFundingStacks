@@ -8,7 +8,6 @@
 (define-constant ERR_TRANSFER_FAILED (err u102))
 (define-constant ERR_NOT_FOUND (err u103))
 (define-constant ERR_METADATA_FROZEN (err u104))
-(define-constant ERR_SELF_DONATION (err u105))
 
 ;; --- NFT Definition -------------------------------------
 ;; SIP-009 compliant NFT
@@ -89,7 +88,9 @@
 )
 
 ;; Donate STX to the creator of a given token.
-;; The STX is transferred directly from the donor to the NFT creator.
+;; If the donor IS the creator, the donation is recorded but no STX transfer
+;; occurs (stx-transfer? disallows same sender/recipient).
+;; If the donor is someone else, STX is transferred to the creator.
 (define-public (donate (token-id uint) (amount uint))
   (let
     (
@@ -99,11 +100,11 @@
     ;; Validate amount > 0
     (asserts! (> amount u0) ERR_ZERO_DONATION)
 
-    ;; Prevent self-donation (stx-transfer? fails with err u2 when sender = recipient)
-    (asserts! (not (is-eq tx-sender creator)) ERR_SELF_DONATION)
-
-    ;; Transfer STX from donor to creator
-    (try! (stx-transfer? amount tx-sender creator))
+    ;; Only transfer STX when donor != creator (stx-transfer? fails for self-sends)
+    (if (not (is-eq tx-sender creator))
+      (try! (stx-transfer? amount tx-sender creator))
+      true
+    )
 
     ;; Update total donations
     (map-set total-donations token-id (+ current-total amount))
