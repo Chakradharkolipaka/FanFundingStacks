@@ -3,66 +3,90 @@
 import React, {
   createContext,
   useContext,
+  useState,
+  useEffect,
+  useCallback,
   ReactNode,
 } from "react";
-import {
-  ConnectButton,
-  useCurrentAccount,
-  useSignAndExecuteTransaction,
-  useSuiClient,
-} from "@mysten/dapp-kit";
-import { Transaction } from "@mysten/sui/transactions";
-import type { SuiClient } from "@mysten/sui/client";
+import { AppConfig, UserSession, showConnect } from "@stacks/connect";
+import { STACKS_NETWORK } from "@/constants";
 
 // ─── Context Types ─────────────────────────────────────────────────
 
 interface WalletContextType {
   address: string | null;
   connected: boolean;
-  suiClient: SuiClient | null;
-  signAndExecuteTransaction: (
-    tx: Transaction
-  ) => Promise<{ digest: string }>;
+  userSession: UserSession;
+  connect: () => void;
+  disconnect: () => void;
 }
+
+const appConfig = new AppConfig(["store_write", "publish_data"]);
+const userSession = new UserSession({ appConfig });
 
 const WalletContext = createContext<WalletContextType>({
   address: null,
   connected: false,
-  suiClient: null,
-  signAndExecuteTransaction: async () => ({ digest: "" }),
+  userSession,
+  connect: () => {},
+  disconnect: () => {},
 });
 
 // ─── Provider ──────────────────────────────────────────────────────
 
-export function SuiWalletProvider({ children }: { children: ReactNode }) {
-  const account = useCurrentAccount();
-  const client = useSuiClient();
-  const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
+export function StacksWalletProvider({ children }: { children: ReactNode }) {
+  const [address, setAddress] = useState<string | null>(null);
+  const [connected, setConnected] = useState(false);
 
-  const address = account?.address ?? null;
-  const connected = !!account;
+  // Check session on mount
+  useEffect(() => {
+    if (userSession.isUserSignedIn()) {
+      const userData = userSession.loadUserData();
+      const addr =
+        STACKS_NETWORK === "mainnet"
+          ? userData.profile?.stxAddress?.mainnet
+          : userData.profile?.stxAddress?.testnet;
+      setAddress(addr || null);
+      setConnected(true);
+    }
+  }, []);
 
-  const signAndExecuteTransaction = async (
-    tx: Transaction
-  ): Promise<{ digest: string }> => {
-    if (!account) throw new Error("Wallet not connected");
-
-    console.log("[Sui Wallet] Signing and executing transaction...");
-    const result = await signAndExecute({
-      transaction: tx,
-      chain: "sui:testnet",
+  const connect = useCallback(() => {
+    showConnect({
+      appDetails: {
+        name: "Fan Funding",
+        icon: "/favicon.ico",
+      },
+      redirectTo: "/",
+      onFinish: () => {
+        if (userSession.isUserSignedIn()) {
+          const userData = userSession.loadUserData();
+          const addr =
+            STACKS_NETWORK === "mainnet"
+              ? userData.profile?.stxAddress?.mainnet
+              : userData.profile?.stxAddress?.testnet;
+          setAddress(addr || null);
+          setConnected(true);
+        }
+      },
+      userSession,
     });
-    console.log("[Sui Wallet] Transaction executed, digest:", result.digest);
-    return { digest: result.digest };
-  };
+  }, []);
+
+  const disconnect = useCallback(() => {
+    userSession.signUserOut("/");
+    setAddress(null);
+    setConnected(false);
+  }, []);
 
   return (
     <WalletContext.Provider
       value={{
         address,
         connected,
-        suiClient: client as unknown as SuiClient,
-        signAndExecuteTransaction,
+        userSession,
+        connect,
+        disconnect,
       }}
     >
       {children}

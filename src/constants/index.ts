@@ -1,26 +1,32 @@
-// ─── Sui Configuration ──────────────────────────────────────────
+// ─── Stacks Configuration ──────────────────────────────────────
 
-/** Package ID on Sui — set via NEXT_PUBLIC_PACKAGE_ID env var */
-export const PACKAGE_ID: string = process.env.NEXT_PUBLIC_PACKAGE_ID || "";
+/** Contract deployer address on Stacks — set via NEXT_PUBLIC_CONTRACT_ADDRESS env var */
+export const CONTRACT_ADDRESS: string =
+  process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "";
 
-/** Shared Collection object ID — set via NEXT_PUBLIC_COLLECTION_ID env var */
-export const COLLECTION_ID: string = process.env.NEXT_PUBLIC_COLLECTION_ID || "";
+/** Contract name as deployed on Stacks */
+export const CONTRACT_NAME: string =
+  process.env.NEXT_PUBLIC_CONTRACT_NAME || "nft-donation";
 
-/** Module name as published on-chain */
-export const MODULE_NAME = "nft_donation";
+/** Full contract identifier: <address>.<name> */
+export const CONTRACT_ID = `${CONTRACT_ADDRESS}.${CONTRACT_NAME}`;
 
-/** Sui fullnode URL (testnet) */
-export const SUI_NODE_URL: string =
-  process.env.NEXT_PUBLIC_SUI_NODE_URL || "https://fullnode.testnet.sui.io:443";
+/** Stacks API base URL (testnet) */
+export const STACKS_API_URL: string =
+  process.env.NEXT_PUBLIC_STACKS_API_URL || "https://api.testnet.hiro.so";
 
-/** Sui explorer base URL (testnet) */
-export const EXPLORER_BASE_URL = "https://suiscan.xyz/testnet";
+/** Stacks explorer base URL (testnet) */
+export const EXPLORER_BASE_URL = "https://explorer.hiro.so";
 
 /** Shorthand used in the UI */
-export const DONATION_TOKEN_SYMBOL = "SUI";
+export const DONATION_TOKEN_SYMBOL = "STX";
 
-/** Number of decimals for SUI (MIST → SUI = 10^9) */
-export const SUI_DECIMALS = 9;
+/** Number of decimals for STX (microSTX → STX = 10^6) */
+export const STX_DECIMALS = 6;
 
 /** Network label shown in the UI */
-export const NETWORK_NAME = "Sui Testnet";
+export const NETWORK_NAME = "Stacks Testnet";
+
+/** Stacks network for @stacks/connect: "testnet" | "mainnet" | "devnet" */
+export const STACKS_NETWORK: "testnet" | "mainnet" | "devnet" =
+  (process.env.NEXT_PUBLIC_STACKS_NETWORK as any) || "testnet";

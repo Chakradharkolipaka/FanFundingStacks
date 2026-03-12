@@ -2,43 +2,52 @@
 
 import { useState, useCallback } from "react";
 import { useWallet } from "@/lib/wallet";
-import { PACKAGE_ID, MODULE_NAME, DONATION_TOKEN_SYMBOL, SUI_NODE_URL } from "@/constants";
+import {
+  CONTRACT_ADDRESS,
+  CONTRACT_NAME,
+  DONATION_TOKEN_SYMBOL,
+  STACKS_API_URL,
+  STACKS_NETWORK,
+} from "@/constants";
 import { useToast } from "@/components/ui/use-toast";
-import { Transaction } from "@mysten/sui/transactions";
-import { SuiClient } from "@mysten/sui/client";
+import { openContractCall } from "@stacks/connect";
+import {
+  uintCV,
+  PostConditionMode,
+  makeStandardSTXPostCondition,
+  FungibleConditionCode,
+} from "@stacks/transactions";
 
 /**
- * Hook for donating SUI to an NFT creator on Sui.
- * Uses the connected Sui wallet to sign & submit a coin split + moveCall transaction.
- *
- * On Sui, we split the gas coin to create a payment Coin<SUI>, then pass
- * it to the donate function which transfers it to the NFT creator.
+ * Hook for donating STX to an NFT creator on Stacks.
+ * Uses the connected Stacks wallet to call the Clarity `donate` function.
  */
 export function useDonate() {
-  const { signAndExecuteTransaction, connected } = useWallet();
+  const { connected, address } = useWallet();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [isConfirmed, setIsConfirmed] = useState(false);
 
   /**
-   * @param tokenObjectId - The Sui object ID of the FanToken to donate to
-   * @param amountMist - Amount in MIST (1 SUI = 10^9 MIST)
+   * @param tokenId - The token ID (uint) of the NFT to donate to
+   * @param amountMicroStx - Amount in microSTX (1 STX = 10^6 microSTX)
    */
   const donate = useCallback(
-    async (tokenObjectId: string, amountMist: bigint) => {
-      if (!connected) {
+    async (tokenId: string, amountMicroStx: bigint) => {
+      if (!connected || !address) {
         toast({
           title: "Wallet Not Connected",
-          description: "Please connect your Sui wallet.",
+          description: "Please connect your Stacks wallet.",
           variant: "destructive",
         });
         return;
       }
-      if (!PACKAGE_ID) {
+      if (!CONTRACT_ADDRESS) {
         toast({
           title: "Configuration Error",
-          description: "Package ID is not set. Set NEXT_PUBLIC_PACKAGE_ID in .env.local.",
+          description:
+            "Contract address is not set. Set NEXT_PUBLIC_CONTRACT_ADDRESS in .env.local.",
           variant: "destructive",
         });
         return;
@@ -51,87 +60,104 @@ export function useDonate() {
 
         toast({
           title: "🔐 Step 1/2: Confirm in Wallet",
-          description: `Please approve the ${DONATION_TOKEN_SYMBOL} donation in your Sui wallet.`,
+          description: `Please approve the ${DONATION_TOKEN_SYMBOL} donation in your Stacks wallet.`,
         });
         console.log("[Donate] Building transaction...");
-        console.log("[Donate] Token Object ID:", tokenObjectId);
-        console.log("[Donate] Amount (MIST):", amountMist.toString());
+        console.log("[Donate] Token ID:", tokenId);
+        console.log("[Donate] Amount (microSTX):", amountMicroStx.toString());
 
-        const tx = new Transaction();
+        const tokenIdNum = parseInt(tokenId, 10);
+        const amountNum = Number(amountMicroStx);
 
-        // Split gas coin to create a Coin<SUI> with the donation amount
-        const [coin] = tx.splitCoins(tx.gas, [tx.pure.u64(amountMist)]);
+        // Create a post condition to ensure the STX transfer
+        const postConditions = [
+          makeStandardSTXPostCondition(
+            address,
+            FungibleConditionCode.LessEqual,
+            amountNum
+          ),
+        ];
 
-        tx.moveCall({
-          target: `${PACKAGE_ID}::${MODULE_NAME}::donate`,
-          arguments: [
-            tx.object(tokenObjectId),
-            coin,
-          ],
-        });
+        await new Promise<void>((resolve, reject) => {
+          openContractCall({
+            contractAddress: CONTRACT_ADDRESS,
+            contractName: CONTRACT_NAME,
+            functionName: "donate",
+            functionArgs: [uintCV(tokenIdNum), uintCV(amountNum)],
+            postConditions,
+            postConditionMode: PostConditionMode.Deny,
+            network: STACKS_NETWORK,
+            onFinish: async (data) => {
+              const txId = data.txId;
+              setTxHash(txId);
+              console.log("[Donate] Transaction submitted. Tx ID:", txId);
 
-        console.log("[Donate] Requesting wallet signature...");
-        const response = await signAndExecuteTransaction(tx);
-        const digest = response.digest;
-
-        setTxHash(digest);
-        console.log("[Donate] Transaction submitted. Digest:", digest);
-
-        toast({
-          title: "⏳ Step 2/2: Transaction Submitted",
-          description: `Tx: ${digest.slice(0, 12)}... Waiting for confirmation.`,
-        });
-
-        // Wait for confirmation
-        const client = new SuiClient({ url: SUI_NODE_URL });
-        let confirmed = false;
-
-        try {
-          const txResult = await client.waitForTransaction({
-            digest,
-            options: { showEffects: true },
-          });
-          confirmed = txResult.effects?.status?.status === "success";
-          console.log("[Donate] Transaction status:", txResult.effects?.status?.status);
-          if (!confirmed) {
-            console.error("[Donate] Transaction failed:", txResult.effects?.status?.error);
-          }
-        } catch (e) {
-          console.warn("[Donate] waitForTransaction failed, polling...");
-          for (let i = 0; i < 20; i++) {
-            try {
-              const txResult = await client.getTransactionBlock({
-                digest,
-                options: { showEffects: true },
+              toast({
+                title: "⏳ Step 2/2: Transaction Submitted",
+                description: `Tx: ${txId.slice(0, 12)}... Waiting for confirmation.`,
               });
-              if (txResult.effects?.status?.status === "success") {
-                confirmed = true;
-                break;
-              }
-            } catch {
-              // retry
-            }
-            await new Promise((r) => setTimeout(r, 1500));
-          }
-        }
 
-        setIsConfirmed(confirmed);
-        toast({
-          title: confirmed ? "✅ Donation Successful!" : "⚠️ Transaction may still be pending",
-          description: confirmed
-            ? "Thank you for supporting this creator on Sui!"
-            : "Check the explorer for final status.",
+              // Wait for confirmation
+              let confirmed = false;
+              for (let i = 0; i < 60; i++) {
+                try {
+                  const txRes = await fetch(
+                    `${STACKS_API_URL}/extended/v1/tx/${txId}`
+                  );
+                  if (txRes.ok) {
+                    const txData = await txRes.json();
+                    if (txData.tx_status === "success") {
+                      confirmed = true;
+                      break;
+                    } else if (
+                      txData.tx_status === "abort_by_response" ||
+                      txData.tx_status === "abort_by_post_condition"
+                    ) {
+                      console.error("[Donate] Transaction failed:", txData.tx_status);
+                      break;
+                    }
+                  }
+                } catch {
+                  // retry
+                }
+                await new Promise((r) => setTimeout(r, 3000));
+              }
+
+              setIsConfirmed(confirmed);
+              toast({
+                title: confirmed
+                  ? "✅ Donation Successful!"
+                  : "⚠️ Transaction may still be pending",
+                description: confirmed
+                  ? "Thank you for supporting this creator on Stacks!"
+                  : "Check the explorer for final status.",
+              });
+              console.log(
+                "[Donate] Final status:",
+                confirmed ? "CONFIRMED" : "PENDING"
+              );
+              resolve();
+            },
+            onCancel: () => {
+              toast({
+                title: "Transaction Rejected",
+                description: "You rejected the transaction in your wallet.",
+                variant: "destructive",
+              });
+              reject(new Error("User rejected"));
+            },
+          });
         });
-        console.log("[Donate] Final status:", confirmed ? "CONFIRMED" : "PENDING");
       } catch (err: any) {
         console.error("[Donate] Error:", err);
         const msg = err?.message || String(err);
-        if (msg.includes("User") || msg.includes("rejected") || msg.includes("Rejected")) {
-          toast({
-            title: "Transaction Rejected",
-            description: "You rejected the transaction in your wallet.",
-            variant: "destructive",
-          });
+        if (
+          msg.includes("User") ||
+          msg.includes("rejected") ||
+          msg.includes("Rejected") ||
+          msg.includes("cancel")
+        ) {
+          // Already handled
         } else {
           toast({
             title: "Donation Failed",
@@ -143,7 +169,7 @@ export function useDonate() {
         setIsLoading(false);
       }
     },
-    [connected, signAndExecuteTransaction, toast]
+    [connected, address, toast]
   );
 
   return { donate, isLoading, txHash, isConfirmed };

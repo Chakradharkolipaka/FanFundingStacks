@@ -23,8 +23,7 @@ import {
   parseEth,
   explorerTxUrl,
   explorerAccountUrl,
-  explorerObjectUrl,
-} from "@/lib/sui-utils";
+} from "@/lib/stacks-utils";
 import { DONATION_TOKEN_SYMBOL } from "@/constants";
 
 import type { NftData } from "@/hooks/useNFTs";
@@ -117,16 +116,6 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
               className="text-xs text-muted-foreground hover:text-primary transition-colors duration-200 flex items-center gap-1"
             >
               Creator: {shortenAddress(owner)} <ExternalLink className="h-3 w-3" />
-            </a>
-          )}
-          {objectId && (
-            <a
-              href={explorerObjectUrl(objectId)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-muted-foreground hover:text-primary transition-colors duration-200 flex items-center gap-1"
-            >
-              Object: {shortenAddress(objectId)} <ExternalLink className="h-3 w-3" />
             </a>
           )}
         </CardContent>
